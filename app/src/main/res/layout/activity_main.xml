@@ -39,8 +39,10 @@
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:text="Reset"/>
+            android:text="Reset"
+            android:onClick="reset"/>
         <Button
+            android:id="@+id/setting"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
@@ -63,7 +65,7 @@
             android:id="@+id/log"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:textSize="40sp"
+            android:textSize="30sp"
             android:textColor="#000"
             />
 

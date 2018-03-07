@@ -11,20 +11,25 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
-    private TextView log,mesg;
     private EditText input;
-    private Button guess;
+    private Button guess , setting;
+    private TextView log, mesg;
     private String answer;
+    private int guesscount;
+    private int guessdigit;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //log - id卻不是抓log 不會提醒錯 但會runtime error
         log = findViewById(R.id.log);
         input = findViewById(R.id.input);
         guess = findViewById(R.id.guess);
         mesg = findViewById(R.id.mesg);
+        setting = findViewById(R.id.setting);
+
         //Android button只能有一個listener 所以用setXXX
         guess.setOnClickListener(new View.OnClickListener(){
 
@@ -41,41 +46,65 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        setting.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                doSetting();
+            }
+        });
+
         initGame();
+        guessdigit = 4;
     }
 
     private void initGame(){
-        answer = createAnswer(3);
-        answer = "123";
+        answer = createAnswer(guessdigit);
         input.setText("");
         log.setText("");
+        guesscount = 1;
+        //answer = "123";
+        Log.v("answerIs", answer);
+    }
+
+    private void doSetting(){
+        showSettingDialog();
     }
 
     private void doGuess(){
         String strInput = input.getText().toString();
         //log.setText(strInput);
 
-        input.setText("");
+        if(strInput.length() != guessdigit){
+            Log.v("worng guess digit",""+strInput.length());
+            showWrongInputDialog();
+        }else{
+            input.setText("");
 
-        String result = checkAB(answer,strInput);
+            String result = checkAB(answer,strInput);
 
-        log.append(strInput+":"+result+"\n");
+            log.append("猜第"+guesscount+"次:"+strInput+":"+result+"\n");
 
-        //Log.v("maggie",createAnswer(4));
+            //Log.v("maggie",createAnswer(4));
+            guesscount++;
 
-        if (result.equals("3A0B")) {
-            showDialog();
+            if (guesscount > 10) {
+                showLossDialog();
+            }
+
+            if (result.equals(guessdigit+"A0B")) {
+                showWinDialog();
+            }
         }
+
+
+
     }
-
-    private void showDialog(){
-        //mesg.setVisibility(View.VISIBLE);
-
-        //利用AlertDialog.Builder
+    private void showLossDialog(){
         AlertDialog alert = null;
+
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("WINNER");
-        builder.setMessage("恭喜猜對了!!");
+        builder.setTitle("LOSER..");
+        builder.setMessage("答案是:" + answer );
 
         builder.setCancelable(false);
         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
@@ -84,16 +113,84 @@ public class MainActivity extends AppCompatActivity {
                 initGame();
             }
         });
+
+        alert = builder.create();
+        alert.show();
+    }
+    private void showWinDialog(){
+        //mesg.setVisibility(View.VISIBLE);
+
+        //設計對話框 (不在版面設計) (沒有設計UI - 使用google原生的UI ,依手機不同長相不同)
+        //利用AlertDialog的內部類別Builder 做出來 (活在顯示在this的Context)
+        //類似js. alert
+        AlertDialog alert = null;
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("WINNER");
+        builder.setMessage("恭喜猜對了!!"+" 答案是:" + answer);
+
+        builder.setCancelable(false);
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                initGame();
+            }
+        });
+
+        //AlertDialog alert 用builder create出來
         alert = builder.create();
         alert.show();
     }
 
-    public void end(View view) {
-        finish();
+    private void showSettingDialog(){
+        AlertDialog alert = null;
+        final CharSequence[] array = {"3","4","5"};
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("設定猜數字位數:");
+
+        builder.setSingleChoiceItems(array, 1, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Log.v("chooseDigit", ""+array[which]);
+                guessdigit = Integer.parseInt(array[which].toString());
+
+            }
+        });
+
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                initGame();
+            }
+        });
+
+        //AlertDialog alert 用builder create出來
+        alert = builder.create();
+        alert.show();
+
+    }
+
+    private void showWrongInputDialog(){
+        AlertDialog alert = null;
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Input Wrong Number..");
+        builder.setMessage("請輸入正確位數:" + guessdigit );
+
+        builder.setCancelable(false);
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                //input.setText("");
+            }
+        });
+
+        alert = builder.create();
+        alert.show();
     }
 
 
-    //onClickListener 匿名物件 也可以寫一個類別 並new出來
+    //onClickListener匿名物件 (另法:也可以寫一個類別 並new出來 )
     private class MyListener implements View.OnClickListener{
         @Override
         public void onClick(View v) {
@@ -137,6 +234,14 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         return A+"A"+B+"B";
+    }
+
+    public void reset(View view) {
+        initGame();
+    }
+
+    public void end(View view) {
+        finish();
     }
 
 }
